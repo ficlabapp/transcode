@@ -18,47 +18,6 @@ for (let path of ["/mobi", "/pdf", "/docx"]) {
     app.ws(path, handleSocketRequest);
 }
 
-app.post(["/mobi", "/pdf", "/docx"], async (request, response) => {
-    let zip = await JSZip.loadAsync(request.body);
-    let file = await zip.file("ficlab.json");
-    if (file === null) {
-        return response.status(400).send("Invalid EPUB file");
-    }
-    let job = JSON.parse(await file.async("string"));
-    console.log(`${job.settings.identity} ${job.settings.format}`);
-    let prefix = RandomString.generate(7);
-    let inputFile = `${prefix}.epub`;
-    fs.writeFile(`/tmp/${inputFile}`, request.body, async err => {
-        try {
-            if (err) {
-                throw err;
-            }
-
-            let output = await (async () => {
-                switch (request.path) {
-                    case "/mobi":
-                        return toMOBI(job, inputFile);
-                    case "/pdf":
-                        return toPDF(job, inputFile);
-                    case "/docx":
-                        return toDOCX(job, inputFile);
-                }
-            })();
-            response.set("Content-Type", output.type);
-            response.sendFile(`/tmp/${output.file}`, null, err => {
-                if (err) {
-                    response.status(500).send("Error sending file");
-                }
-                fs.unlink(`/tmp/${output.file}`, () => {});
-            });
-        } catch (e) {
-            response.status(500).send(`Transcode error: ${e.message}`);
-        }
-
-        fs.unlink(`/tmp/${inputFile}`, () => {});
-    });
-});
-
 app.listen(port, () => {
     console.log(`Listening for transcode requests on port ${port}`);
 });
