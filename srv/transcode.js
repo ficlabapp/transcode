@@ -14,7 +14,7 @@ app.use(bodyParser.raw({ limit: "10mb", type: "application/epub+zip" }));
 expressWS(app);
 const port = 8080;
 
-for (let path of ["/mobi", "/pdf", "/docx"]) {
+for (let path of ["/1/mobi", "/1/pdf", "/1/docx"]) {
     app.ws(path, handleSocketRequest);
 }
 
@@ -44,11 +44,11 @@ function handleSocketRequest(ws, request) {
 
                 let output = await (async () => {
                     switch (request.path) {
-                        case "/mobi/.websocket":
+                        case "/1/mobi/.websocket":
                             return toMOBI(cfg, inputFile);
-                        case "/pdf/.websocket":
+                        case "/1/pdf/.websocket":
                             return toPDF(cfg, inputFile);
-                        case "/docx/.websocket":
+                        case "/1/docx/.websocket":
                             return toDOCX(cfg, inputFile);
                     }
                 })();
