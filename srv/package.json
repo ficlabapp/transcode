@@ -1,0 +1,26 @@
+{
+    "name": "ficlab-transcode",
+    "version": "0.6.38-dev",
+    "description": "Transcodes FicLab ebooks into Kindle & PDF formats",
+    "homepage": "https://www.ficlab.com/",
+    "license": "ISC",
+    "author": [
+        {
+            "name": "Steve Gilberd",
+            "email": "steve@erayd.net"
+        }
+    ],
+    "dependencies": {
+        "express": "^4.17.1",
+        "express-ws": "^4.0.0",
+        "jszip": "^3.2.2",
+        "randomstring": "^1.1.5"
+    },
+    "scripts": {
+        "postinstall": "patch-package"
+    },
+    "devDependencies": {
+        "patch-package": "^6.1.2",
+        "prettier": "^1.18.2"
+    }
+}
