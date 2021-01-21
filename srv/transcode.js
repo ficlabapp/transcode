@@ -26,12 +26,14 @@ function handleSocketRequest(ws, request) {
     ws.on("message", async message => {
         let buf = await Buffer.from(message);
         let zip = await JSZip.loadAsync(buf);
-        let file = await zip.file("ficlab.json");
-        if (file === null) {
+        let file = await zip.file("META-INF/ficlab-settings.json");
+        let id = await(zip.file("META-INF/ficlab-id"))
+        if (file === null || !id) {
             return ws.send("Invalid EPUB file");
         }
-        let job = JSON.parse(await file.async("string"));
-        console.log(`${job.settings.identity} ${job.settings.format}`);
+        id = await id.async("string");
+        let cfg = JSON.parse(await file.async("string"));
+        console.log(`${cfg.id} ${cfg.format}`);
         let prefix = RandomString.generate(7);
         let inputFile = `${prefix}.epub`;
         fs.writeFile(`/tmp/${inputFile}`, buf, async err => {
@@ -43,11 +45,11 @@ function handleSocketRequest(ws, request) {
                 let output = await (async () => {
                     switch (request.path) {
                         case "/mobi/.websocket":
-                            return toMOBI(job, inputFile);
+                            return toMOBI(cfg, inputFile);
                         case "/pdf/.websocket":
-                            return toPDF(job, inputFile);
+                            return toPDF(cfg, inputFile);
                         case "/docx/.websocket":
-                            return toDOCX(job, inputFile);
+                            return toDOCX(cfg, inputFile);
                     }
                 })();
                 fs.readFile(`/tmp/${output.file}`, (err, data) => {
@@ -68,13 +70,13 @@ function handleSocketRequest(ws, request) {
     });
 }
 
-function toMOBI(job, filename, workDir = "/tmp") {
+function toMOBI(cfg, filename, workDir = "/tmp") {
     return new Promise((resolve, reject) => {
         let kindlegen = spawn("kindlegen", ["-o", `${filename}.mobi`, "-C0", filename], {
             cwd: workDir
         });
         kindlegen.on("close", status => {
-            if (status > 0 && !job.settings.wantCover) {
+            if (status > 0 && !cfg.cover.enable) {
                 try {
                     fs.accessSync(`${filename}.mobi`);
                     status = 0;
@@ -95,9 +97,9 @@ function toMOBI(job, filename, workDir = "/tmp") {
     });
 }
 
-function toPDF(job, filename, workDir = "/tmp") {
+function toPDF(cfg, filename, workDir = "/tmp") {
     return new Promise((resolve, reject) => {
-        let fontSize = `${job.settings.fontSize * 20}`;
+        let fontSize = `${cfg.book.size * 20}`;
         let calibre = spawn(
             "ebook-convert",
             [
@@ -129,9 +131,9 @@ function toPDF(job, filename, workDir = "/tmp") {
     });
 }
 
-function toDOCX(job, filename, workDir = "/tmp") {
+function toDOCX(cfg, filename, workDir = "/tmp") {
     return new Promise((resolve, reject) => {
-        let fontSize = `${job.settings.fontSize * 20}`;
+        let fontSize = `${cfg.book.size * 20}`;
         let calibre = spawn(
             "ebook-convert",
             [
