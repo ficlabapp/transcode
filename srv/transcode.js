@@ -112,6 +112,12 @@ function toPDF(cfg, filename, workDir = "/tmp") {
                 "6.93x9.24",
                 "--pdf-default-font-size",
                 fontSize,
+                "--pdf-mono-family",
+                "Liberation Mono",
+                "--pdf-sans-family",
+                "Liberation Sans",
+                "--pdf-serif-family",
+                "Liberation Serif",
                 "--book-producer",
                 "FicLab"
             ],
