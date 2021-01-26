@@ -14,7 +14,7 @@ RUN curl -so /root/kindlegen.tar.gz https://mirror.erayd.net/kindlegen-v2.9-1028
 RUN \
     npm install -g yarn && \
     tar -C /usr/local/bin -zxf /root/kindlegen.tar.gz kindlegen  && \
-    curl -s https://download.calibre-ebook.com/linux-installer.sh | bash /dev/stdin version=4.22.0 \
+    curl -s https://download.calibre-ebook.com/linux-installer.sh | bash /dev/stdin version=5.10.1 \
     ;
 EXPOSE 8080/tcp
 COPY etc/ /etc/
