@@ -5,6 +5,7 @@ RUN yum -y install \
     libXcomposite \
     libXrender \
     python3-qt5-base \
+    liberation-fonts \
     nss \
     supervisor \
     nodejs \
