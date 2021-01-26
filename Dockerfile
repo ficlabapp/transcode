@@ -4,6 +4,8 @@ RUN yum -y groupinstall Fonts;
 RUN yum -y install \
     libXcomposite \
     libXrender \
+    libXrandr \
+    libXi \
     python3-qt5-base \
     liberation-fonts \
     nss \
