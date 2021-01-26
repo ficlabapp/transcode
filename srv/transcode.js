@@ -99,7 +99,6 @@ async function toMOBI(cfg, filename, workDir = "/tmp") {
 
 async function toPDF(cfg, filename, workDir = "/tmp") {
     return await new Promise((resolve, reject) => {
-        let fontSize = `${cfg.book.size * 20}`;
         let calibre = spawn(
             "ebook-convert",
             [
@@ -110,8 +109,6 @@ async function toPDF(cfg, filename, workDir = "/tmp") {
                 "--preserve-cover-aspect-ratio",
                 "--custom-size",
                 "6.93x9.24",
-                "--pdf-default-font-size",
-                fontSize,
                 "--pdf-mono-family",
                 "Liberation Mono",
                 "--pdf-sans-family",
