@@ -118,6 +118,8 @@ function toPDF(cfg, filename, workDir = "/tmp") {
                 "Liberation Sans",
                 "--pdf-serif-family",
                 "Liberation Serif",
+                "--embed-all-fonts",
+                "--subset-embedded-fonts",
                 "--book-producer",
                 "FicLab"
             ],
