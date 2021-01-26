@@ -23,11 +23,11 @@ app.listen(port, () => {
 });
 
 function handleSocketRequest(ws, request) {
-    ws.on("message", async message => {
+    ws.on("message", async (message) => {
         let buf = await Buffer.from(message);
         let zip = await JSZip.loadAsync(buf);
         let file = await zip.file("META-INF/ficlab-settings.json");
-        let id = await(zip.file("META-INF/ficlab-id"))
+        let id = await zip.file("META-INF/ficlab-id");
         if (file === null || !id) {
             return ws.send("Invalid EPUB file");
         }
@@ -36,7 +36,7 @@ function handleSocketRequest(ws, request) {
         console.log(`${cfg.id} ${cfg.format}`);
         let prefix = RandomString.generate(7);
         let inputFile = `${prefix}.epub`;
-        fs.writeFile(`/tmp/${inputFile}`, buf, async err => {
+        fs.writeFile(`/tmp/${inputFile}`, buf, async (err) => {
             try {
                 if (err) {
                     throw err;
@@ -45,11 +45,11 @@ function handleSocketRequest(ws, request) {
                 let output = await (async () => {
                     switch (request.path) {
                         case "/1/mobi/.websocket":
-                            return toMOBI(cfg, inputFile);
+                            return await toMOBI(cfg, inputFile);
                         case "/1/pdf/.websocket":
-                            return toPDF(cfg, inputFile);
+                            return await toPDF(cfg, inputFile);
                         case "/1/docx/.websocket":
-                            return toDOCX(cfg, inputFile);
+                            return await toDOCX(cfg, inputFile);
                     }
                 })();
                 fs.readFile(`/tmp/${output.file}`, (err, data) => {
@@ -60,8 +60,8 @@ function handleSocketRequest(ws, request) {
                     ws.close();
                     fs.unlink(`/tmp/${output.file}`, () => {});
                 });
-            } catch (e) {
-                ws.send(`Transcode error: ${e.message}`);
+            } catch (err) {
+                ws.send(`Transcode error: ${err.message || err}`);
                 ws.close();
             }
 
@@ -70,12 +70,12 @@ function handleSocketRequest(ws, request) {
     });
 }
 
-function toMOBI(cfg, filename, workDir = "/tmp") {
-    return new Promise((resolve, reject) => {
+async function toMOBI(cfg, filename, workDir = "/tmp") {
+    return await new Promise((resolve, reject) => {
         let kindlegen = spawn("kindlegen", ["-o", `${filename}.mobi`, "-C0", filename], {
-            cwd: workDir
+            cwd: workDir,
         });
-        kindlegen.on("close", status => {
+        kindlegen.on("close", (status) => {
             if (status > 0 && !cfg.cover.enable) {
                 try {
                     fs.accessSync(`${filename}.mobi`);
@@ -89,16 +89,16 @@ function toMOBI(cfg, filename, workDir = "/tmp") {
             } else {
                 resolve({
                     type: "application/vnd.amazon.ebook",
-                    file: `${filename}.mobi`
+                    file: `${filename}.mobi`,
                 });
             }
         });
-        kindlegen.on("error", err => reject(err));
+        kindlegen.on("error", (err) => reject(err));
     });
 }
 
-function toPDF(cfg, filename, workDir = "/tmp") {
-    return new Promise((resolve, reject) => {
+async function toPDF(cfg, filename, workDir = "/tmp") {
+    return await new Promise((resolve, reject) => {
         let fontSize = `${cfg.book.size * 20}`;
         let calibre = spawn(
             "ebook-convert",
@@ -121,26 +121,26 @@ function toPDF(cfg, filename, workDir = "/tmp") {
                 "--embed-all-fonts",
                 "--subset-embedded-fonts",
                 "--book-producer",
-                "FicLab"
+                "FicLab",
             ],
             { cwd: workDir }
         );
-        calibre.on("close", status => {
+        calibre.on("close", (status) => {
             if (status > 0) {
-                reject(`Unable to convert file (code: ${status})`);
+                reject(new Error(`Unable to convert file (code: ${status})`));
             } else {
                 resolve({
                     type: "application/pdf",
-                    file: `${filename}.pdf`
+                    file: `${filename}.pdf`,
                 });
             }
         });
-        calibre.on("error", err => reject(err));
+        calibre.on("error", (err) => reject(err));
     });
 }
 
-function toDOCX(cfg, filename, workDir = "/tmp") {
-    return new Promise((resolve, reject) => {
+async function toDOCX(cfg, filename, workDir = "/tmp") {
+    return await new Promise((resolve, reject) => {
         let fontSize = `${cfg.book.size * 20}`;
         let calibre = spawn(
             "ebook-convert",
@@ -150,20 +150,20 @@ function toDOCX(cfg, filename, workDir = "/tmp") {
                 "--prefer-metadata-cover",
                 "--chapter-mark=pagebreak",
                 "--book-producer",
-                "FicLab"
+                "FicLab",
             ],
             { cwd: workDir }
         );
-        calibre.on("close", status => {
+        calibre.on("close", (status) => {
             if (status > 0) {
-                reject(`Unable to convert file (code: ${status})`);
+                reject(new Error(`Unable to convert file (code: ${status})`));
             } else {
                 resolve({
                     type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    file: `${filename}.docx`
+                    file: `${filename}.docx`,
                 });
             }
         });
-        calibre.on("error", err => reject(err));
+        calibre.on("error", (err) => reject(err));
     });
 }
