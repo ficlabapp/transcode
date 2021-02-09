@@ -35,9 +35,6 @@ function handleSocketRequest(ws, request) {
         }
     }, pingInterval);
     ws.on("pong", message => lastSeen = parseInt(message));
-    ws.on("pong", message => {
-        console.log(parseInt(message));
-    });
     ws.on("message", async (message) => {
         let start = Date.now();
         let buf = await Buffer.from(message);
