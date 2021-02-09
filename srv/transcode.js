@@ -39,6 +39,7 @@ function handleSocketRequest(ws, request) {
         console.log(parseInt(message));
     });
     ws.on("message", async (message) => {
+        let start = Date.now();
         let buf = await Buffer.from(message);
         let zip = await JSZip.loadAsync(buf);
         let file = await zip.file("META-INF/ficlab-settings.json");
@@ -48,7 +49,6 @@ function handleSocketRequest(ws, request) {
         }
         id = await id.async("string");
         let cfg = JSON.parse(await file.async("string"));
-        console.log(`${cfg.id} ${cfg.format}`);
         let prefix = RandomString.generate(7);
         let inputFile = `${prefix}.epub`;
         fs.writeFile(`/tmp/${inputFile}`, buf, async (err) => {
@@ -77,6 +77,7 @@ function handleSocketRequest(ws, request) {
                     }
                     fs.unlink(`/tmp/${output.file}`, () => {});
                 });
+                console.log(`${cfg.id} ${cfg.format} ${Date.now() - start}`);
             } catch (err) {
                 if (ws.readyState === 1) ws.send(`Transcode error: ${err.message || err}`);
                 ws.close();
