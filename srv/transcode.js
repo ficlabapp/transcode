@@ -13,6 +13,8 @@ const app = express();
 app.use(bodyParser.raw({ limit: "10mb", type: "application/epub+zip" }));
 expressWS(app);
 const port = 8080;
+const pingInterval = 10000;
+const pingTimeout = 60000;
 
 for (let path of ["/1/mobi", "/1/pdf", "/1/docx"]) {
     app.ws(path, handleSocketRequest);
@@ -23,6 +25,19 @@ app.listen(port, () => {
 });
 
 function handleSocketRequest(ws, request) {
+    let lastSeen = Date.now();
+    let pinger = setInterval(() => {
+        if (ws.readyState > 1 || lastSeen + pingTimeout < Date.now()) {
+            clearInterval(pinger);
+            ws.close();
+        } else {
+            ws.ping(Date.now());
+        }
+    }, pingInterval);
+    ws.on("pong", message => lastSeen = parseInt(message));
+    ws.on("pong", message => {
+        console.log(parseInt(message));
+    });
     ws.on("message", async (message) => {
         let buf = await Buffer.from(message);
         let zip = await JSZip.loadAsync(buf);
@@ -56,12 +71,14 @@ function handleSocketRequest(ws, request) {
                     if (err) {
                         throw err;
                     }
-                    ws.send(data);
-                    ws.close();
+                    if (ws.readyState === 1) {
+                        ws.send(data);
+                        ws.close();
+                    }
                     fs.unlink(`/tmp/${output.file}`, () => {});
                 });
             } catch (err) {
-                ws.send(`Transcode error: ${err.message || err}`);
+                if (ws.readyState === 1) ws.send(`Transcode error: ${err.message || err}`);
                 ws.close();
             }
 

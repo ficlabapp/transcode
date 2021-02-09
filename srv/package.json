@@ -1,6 +1,6 @@
 {
     "name": "ficlab-transcode",
-    "version": "0.6.38-dev",
+    "version": "1.0.4",
     "description": "Transcodes FicLab ebooks into Kindle & PDF formats",
     "homepage": "https://www.ficlab.com/",
     "license": "ISC",
