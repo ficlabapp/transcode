@@ -16,7 +16,7 @@ const port = 8080;
 const pingInterval = 10000;
 const pingTimeout = 60000;
 
-for (let path of ["/1/mobi", "/1/pdf", "/1/docx"]) {
+for (let path of ["/2/mobi", "/2/pdf", "/2/docx", "/2/azw3"]) {
     app.ws(path, handleSocketRequest);
 }
 
@@ -56,12 +56,14 @@ function handleSocketRequest(ws, request) {
 
                 let output = await (async () => {
                     switch (request.path) {
-                        case "/1/mobi/.websocket":
+                        case "/2/mobi/.websocket":
                             return await toMOBI(cfg, inputFile);
-                        case "/1/pdf/.websocket":
+                        case "/2/pdf/.websocket":
                             return await toPDF(cfg, inputFile);
-                        case "/1/docx/.websocket":
+                        case "/2/docx/.websocket":
                             return await toDOCX(cfg, inputFile);
+                        case "/2/azw3/.websocket":
+                            return await toAZW3(cfg, inputFile);
                     }
                 })();
                 fs.readFile(`/tmp/${output.file}`, (err, data) => {
