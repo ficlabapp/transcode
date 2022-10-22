@@ -184,3 +184,31 @@ async function toDOCX(cfg, filename, workDir = "/tmp") {
         calibre.on("error", (err) => reject(err));
     });
 }
+
+async function toAZW3(cfg, filename, workDir = "/tmp") {
+    return await new Promise((resolve, reject) => {
+        let calibre = spawn(
+            "ebook-convert",
+            [
+                filename,
+                `${filename}.azw3`,
+                "--prefer-metadata-cover",
+                "--chapter-mark=pagebreak",
+                "--no-inline-toc",
+                "--book-producer=FicLab",
+            ],
+            { cwd: workDir }
+        );
+        calibre.on("close", (status) => {
+            if (status > 0) {
+                reject(new Error(`Unable to convert file (code: ${status})`));
+            } else {
+                resolve({
+                    type: "application/application/vnd.amazon.mobi8-ebook",
+                    file: `${filename}.azw3`,
+                });
+            }
+        });
+        calibre.on("error", (err) => reject(err));
+    });
+}
