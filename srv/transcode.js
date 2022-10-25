@@ -102,7 +102,8 @@ async function toMOBI(cfg, filename, workDir = "/tmp") {
                 }
             }
             if (status > 0) {
-                reject(new Error(`Unable to convert file (code: ${status})`));
+                let err = new Error(`Unable to convert file (code: ${status})`);
+                toMobiFallback(cfg, filename, workDir).then(r => resolve(r), r => reject(err));
             } else {
                 resolve({
                     type: "application/vnd.amazon.ebook",
@@ -110,7 +111,9 @@ async function toMOBI(cfg, filename, workDir = "/tmp") {
                 });
             }
         });
-        kindlegen.on("error", (err) => reject(err));
+        kindlegen.on("error", (err) => {
+            toMobiFallback(cfg, filename, workDir).then(r => resolve(r), r => reject(err));
+        });
     });
 }
 
@@ -178,6 +181,34 @@ async function toDOCX(cfg, filename, workDir = "/tmp") {
                 resolve({
                     type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     file: `${filename}.docx`,
+                });
+            }
+        });
+        calibre.on("error", (err) => reject(err));
+    });
+}
+
+async function toMobiFallback(cfg, filename, workDir = "/tmp") {
+    return await new Promise((resolve, reject) => {
+        let calibre = spawn(
+            "ebook-convert",
+            [
+                filename,
+                `${filename}.mobi`,
+                "--prefer-metadata-cover",
+                "--chapter-mark=pagebreak",
+                "--no-inline-toc",
+                "--book-producer=FicLab",
+            ],
+            { cwd: workDir }
+        );
+        calibre.on("close", (status) => {
+            if (status > 0) {
+                reject(new Error(`Unable to convert file (code: ${status})`));
+            } else {
+                resolve({
+                    type: "application/application/vnd.amazon.mobi8-ebook",
+                    file: `${filename}.mobi`,
                 });
             }
         });
