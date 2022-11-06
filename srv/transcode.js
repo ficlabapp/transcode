@@ -101,7 +101,7 @@ async function toMOBI(cfg, filename, workDir = "/tmp") {
                     status = -1;
                 }
             }
-            if (status > 0) {
+            if (status != 0) {
                 let err = new Error(`Unable to convert file (code: ${status})`);
                 toMobiFallback(cfg, filename, workDir).then(r => resolve(r), r => reject(err));
             } else {
